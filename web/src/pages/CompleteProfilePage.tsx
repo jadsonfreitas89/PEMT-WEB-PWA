@@ -51,10 +51,14 @@ export default function CompleteProfilePage() {
 
   // Redireciona se perfil já estiver 100% completo ou se for ADMIN sem primeiroAcesso pendente
   useEffect(() => {
+    console.log('[ADMIN DEBUG] CompleteProfilePage profile:', profile);
+    console.log('[ADMIN DEBUG] CompleteProfilePage role:', profile?.perfil);
+    console.log('[ADMIN DEBUG] CompleteProfilePage primeiroAcesso:', profile?.primeiroAcesso);
     if (authState === 'AUTHENTICATED_PROFILE_COMPLETE' || (isAdmin && profile?.primeiroAcesso === false)) {
+      console.log('[ADMIN DEBUG] CompleteProfilePage redirecting ADMIN to /');
       navigate('/', { replace: true });
     }
-  }, [authState, isAdmin, profile?.primeiroAcesso, navigate]);
+  }, [authState, isAdmin, profile, navigate]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();

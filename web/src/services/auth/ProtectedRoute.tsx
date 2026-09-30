@@ -32,7 +32,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (authState === 'AUTHENTICATED_NO_PROFILE' || authState === 'AUTHENTICATED_PROFILE_INCOMPLETE') {
-    console.log('[ONBOARDING_DEBUG] Usuário com perfil incompleto na rota:', location.pathname);
+    console.log('[ADMIN DEBUG] ProtectedRoute branch: AUTHENTICATED_NO_PROFILE or AUTHENTICATED_PROFILE_INCOMPLETE');
+    console.log('[ADMIN DEBUG] redirect target: /complete-profile');
     if (location.pathname !== '/setup' && location.pathname !== '/initial-setup') {
       return <Navigate to="/complete-profile" replace />;
     }

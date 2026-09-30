@@ -97,12 +97,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Caso de Inativo: ativo === false -> Desconecta e informa desativação
    */
   const evaluateUserProfile = useCallback(async (firebaseUser: { uid: string; email?: string | null; displayName?: string | null }) => {
-    console.log('[AUTH DEBUG] carregando perfil para uid:', firebaseUser.uid);
+    console.log('[ADMIN DEBUG] Firebase UID:', firebaseUser.uid);
+    console.log('[ADMIN DEBUG] Email Auth:', firebaseUser.email);
+
+    const isAdminEmail = firebaseUser.email?.toLowerCase() === 'admin@pemt.local' || firebaseUser.email?.toLowerCase() === 'admin@pemt.com.br';
+
     try {
       const result = await getUserProfileWithStatus(firebaseUser.uid);
-      console.log('[AUTH DEBUG] perfil carregado result.status:', result.status);
+      console.log('[ADMIN DEBUG] Perfil carregado status:', result.status);
+      console.log('[ADMIN DEBUG] Perfil carregado dados:', result.profile);
 
-      if (result.status === 'NOT_FOUND') {
+      let prof = result.profile;
+
+      // Se for o e-mail técnico do admin e o documento no Firestore não existir ou não tiver perfil ADMIN, auto-cria/corrige o perfil de ADMIN
+      if (isAdminEmail && (result.status === 'NOT_FOUND' || !prof || (prof.perfil !== 'ADMIN' && prof.perfil !== 'ADMINISTRADOR'))) {
+        console.log('[ADMIN DEBUG] Reparando/Criando perfil ADMIN no Firestore para UID:', firebaseUser.uid);
+        
+        // Regra de primeiroAcesso:
+        // 1. Se o documento já existe e tem primeiroAcesso definido (boolean), preserva o valor existente (true ou false).
+        // 2. Se o documento é NOVO (NOT_FOUND) ou primeiroAcesso está ausente/undefined, define como true (primeiro acesso obrigatório).
+        const targetPrimeiroAcesso = typeof prof?.primeiroAcesso === 'boolean' ? prof.primeiroAcesso : true;
+
+        prof = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || 'admin@pemt.local',
+          nome: firebaseUser.displayName || prof?.nome || 'Administrador Inicial',
+          perfil: 'ADMIN',
+          ativo: true,
+          primeiroAcesso: targetPrimeiroAcesso,
+          empresaId: prof?.empresaId || '',
+          empresaNome: prof?.empresaNome || '',
+          criadoEm: prof?.criadoEm || Date.now(),
+          atualizadoEm: Date.now()
+        };
+        await saveUserProfile(prof);
+      }
+
+      if (!prof && result.status === 'NOT_FOUND') {
         // SITUAÇÃO B: Autenticou, mas não possui documento usuarios/{uid}
         setUser({
           uid: firebaseUser.uid,
@@ -113,12 +144,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         setProfile(null);
         setAuthState('AUTHENTICATED_NO_PROFILE');
+        console.log('[ADMIN DEBUG] auth state: AUTHENTICATED_NO_PROFILE');
         return null;
       }
 
-      if (result.status === 'EXISTS' && result.profile) {
-        const prof = result.profile;
-
+      if (prof) {
         // Validação de conta ativa
         if (prof.ativo === false) {
           console.warn('[AuthContext] Usuário desativado pelo administrador:', prof.uid);
@@ -127,18 +157,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(null);
           setAuthError('Sua conta está desativada no sistema. Entre em contato com o administrador.');
           setAuthState('UNAUTHENTICATED');
+          console.log('[ADMIN DEBUG] auth state: UNAUTHENTICATED (conta desativada)');
           return null;
         }
 
         setProfile(prof);
         setUser(mapProfileToUser(prof));
 
-        if (isProfileComplete(prof)) {
-          // SITUAÇÃO A: Perfil completo
+        const complete = isProfileComplete(prof);
+        console.log('[ADMIN DEBUG] profile role:', prof.perfil);
+        console.log('[ADMIN DEBUG] primeiroAcesso:', prof.primeiroAcesso);
+        console.log('[ADMIN DEBUG] empresaId:', prof.empresaId);
+        console.log('[ADMIN DEBUG] ativo:', prof.ativo);
+        console.log('[ADMIN DEBUG] profile complete:', complete);
+
+        if (complete) {
           setAuthState('AUTHENTICATED_PROFILE_COMPLETE');
+          console.log('[ADMIN DEBUG] auth state: AUTHENTICATED_PROFILE_COMPLETE');
         } else {
-          // SITUAÇÃO C: Perfil existente, mas incompleto
           setAuthState('AUTHENTICATED_PROFILE_INCOMPLETE');
+          console.log('[ADMIN DEBUG] auth state: AUTHENTICATED_PROFILE_INCOMPLETE');
         }
         return prof;
       }
