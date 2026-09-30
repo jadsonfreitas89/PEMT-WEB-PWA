@@ -47,12 +47,14 @@ export default function CompleteProfilePage() {
     }
   }, [profile, user]);
 
-  // Redireciona se perfil já estiver 100% completo
+  const isAdmin = profile?.perfil === 'ADMIN' || profile?.perfil === 'ADMINISTRADOR';
+
+  // Redireciona se perfil já estiver 100% completo ou se for ADMIN sem primeiroAcesso pendente
   useEffect(() => {
-    if (authState === 'AUTHENTICATED_PROFILE_COMPLETE') {
-      navigate('/');
+    if (authState === 'AUTHENTICATED_PROFILE_COMPLETE' || (isAdmin && profile?.primeiroAcesso === false)) {
+      navigate('/', { replace: true });
     }
-  }, [authState, navigate]);
+  }, [authState, isAdmin, profile?.primeiroAcesso, navigate]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -242,6 +244,11 @@ export default function CompleteProfilePage() {
               {isChangingPassword ? 'Alterando...' : 'Alterar Senha'}
             </button>
           </form>
+        ) : isAdmin ? (
+          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-secondary)' }}>
+            <RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto 12px', color: 'var(--primary)' }} />
+            <p style={{ fontWeight: 600, margin: 0 }}>Redirecionando para o painel administrativo...</p>
+          </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '18px' }}>
           

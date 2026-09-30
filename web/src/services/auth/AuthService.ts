@@ -23,6 +23,7 @@ const AuthService = {
       throw new Error('Firebase Auth não está inicializado.');
     }
     const email = `${username.trim().toLowerCase()}@pemt.local`;
+    console.log(`[AUTH DEBUG] username=${username.trim()} email=${email}`);
     const credential = await signInWithEmailAndPassword(authInstance, email, password);
     return credential.user;
   },

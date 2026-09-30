@@ -78,9 +78,18 @@ export function mapProfileToUser(profile: UserProfile): User {
 export function isProfileComplete(profile: UserProfile | null): boolean {
   if (!profile) return false;
   if (profile.primeiroAcesso) return false;
+
+  const ativo = profile.ativo !== false;
+  const isAdmin = profile.perfil === 'ADMIN' || profile.perfil === 'ADMINISTRADOR';
+
+  // Para Administradores, não exigimos empresaId nem dados de vinculação de Inspetor.
+  // Se primeiroAcesso === false e a conta está ativa, o perfil do ADMIN é completo.
+  if (isAdmin) {
+    return ativo;
+  }
+
   const companyId = profile.empresaId?.trim();
   const nome = profile.nome?.trim();
-  const ativo = profile.ativo !== false;
   return (
     Boolean(nome) &&
     Boolean(companyId) &&

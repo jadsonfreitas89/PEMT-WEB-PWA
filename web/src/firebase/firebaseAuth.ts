@@ -30,9 +30,8 @@ async function login(username: string, password: string) {
     throw new Error('Firebase não está configurado.');
   }
   
-  const email = `${username.toLowerCase()}@pemt.local`;
-  console.log('[AUTH DEBUG] username recebido:', username);
-  console.log('[AUTH DEBUG] identificador Firebase:', email);
+  const email = `${username.trim().toLowerCase()}@pemt.local`;
+  console.log(`[AUTH DEBUG] username=${username.trim()} email=${email}`);
   
   try {
     console.log('[AUTH DEBUG] iniciando signIn:');
