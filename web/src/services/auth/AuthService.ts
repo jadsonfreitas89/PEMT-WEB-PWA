@@ -16,28 +16,29 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 const AuthService = {
   /**
-   * Realiza login com E-mail e Senha.
+   * Realiza login com Usuário e Senha.
    */
-  async login(email: string, password: string): Promise<FirebaseUser> {
+  async login(username: string, password: string): Promise<FirebaseUser> {
     if (!authInstance) {
       throw new Error('Firebase Auth não está inicializado.');
     }
-    const credential = await signInWithEmailAndPassword(authInstance, email.trim(), password);
+    const email = `${username.trim().toLowerCase()}@pemt.local`;
+    const credential = await signInWithEmailAndPassword(authInstance, email, password);
     return credential.user;
   },
 
   /**
-   * Realiza cadastro de novo usuário no Firebase Auth com E-mail, Senha e Nome.
+   * Realiza cadastro de novo usuário no Firebase Auth com Usuário, Senha e Nome.
    */
-  async register(email: string, password: string, name: string): Promise<FirebaseUser> {
+  async register(username: string, password: string, name: string): Promise<FirebaseUser> {
     if (!authInstance) {
       throw new Error('Firebase Auth não está inicializado.');
     }
 
-    const trimmedEmail = email.trim();
+    const email = `${username.trim().toLowerCase()}@pemt.local`;
     const trimmedName = name.trim();
 
-    const credential = await createUserWithEmailAndPassword(authInstance, trimmedEmail, password);
+    const credential = await createUserWithEmailAndPassword(authInstance, email, password);
     const user = credential.user;
 
     // Atualiza o displayName no objeto de auth do Firebase

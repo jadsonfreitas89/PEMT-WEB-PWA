@@ -8,7 +8,7 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const { register } = useAuth();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -19,21 +19,15 @@ export default function RegisterPage() {
     setError(null);
 
     const trimmedName = name.trim();
-    const trimmedEmail = email.trim();
+    const trimmedUsername = username.trim();
 
     if (!trimmedName) {
       setError('Informe seu nome completo.');
       return;
     }
 
-    if (!trimmedEmail) {
-      setError('Informe um endereço de e-mail.');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(trimmedEmail)) {
-      setError('Informe um e-mail com formato válido (ex: usuario@empresa.com).');
+    if (!trimmedUsername) {
+      setError('Informe um nome de usuário.');
       return;
     }
 
@@ -50,7 +44,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await register(trimmedEmail, password, trimmedName);
+      await register(trimmedUsername, password, trimmedName);
       navigate('/complete-profile');
     } catch (err) {
       setError(mapAuthError(err));
@@ -123,13 +117,13 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label>E-mail Corporativo *</label>
+            <label>Usuário *</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="carlos@engenharia.com.br"
-              autoComplete="email"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="ex: carlos.santos"
+              autoComplete="username"
               disabled={isLoading}
               required
             />

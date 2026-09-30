@@ -24,7 +24,7 @@ export function mapAuthError(error: unknown): string {
   const errorString = `${rawCode} ${rawMessage}`.toLowerCase();
 
   if (errorString.includes('auth/invalid-credential') || errorString.includes('auth/wrong-password') || errorString.includes('invalid-credential') || errorString.includes('wrong-password')) {
-    return 'E-mail ou senha incorretos. Se você ainda não possui cadastro, crie uma conta.';
+    return 'Usuário ou senha incorretos.';
   }
 
   if (errorString.includes('auth/user-not-found') || errorString.includes('user-not-found')) {
@@ -32,11 +32,11 @@ export function mapAuthError(error: unknown): string {
   }
 
   if (errorString.includes('auth/email-already-in-use') || errorString.includes('email-already-in-use')) {
-    return 'Este e-mail já está cadastrado. Faça login com sua senha.';
+    return 'Este usuário já está cadastrado. Faça login com sua senha.';
   }
 
   if (errorString.includes('auth/invalid-email') || errorString.includes('invalid-email')) {
-    return 'O formato do e-mail é inválido.';
+    return 'O formato do usuário é inválido.';
   }
 
   if (errorString.includes('auth/weak-password') || errorString.includes('weak-password')) {
@@ -68,7 +68,7 @@ export function mapAuthError(error: unknown): string {
   }
 
   if (errorString.includes('auth/unverified-email') || errorString.includes('unverified-email')) {
-    return 'É necessário verificar seu e-mail antes de prosseguir.';
+    return 'É necessário verificar seu usuário antes de prosseguir.';
   }
 
   if (errorString.includes('auth/internal-error') || errorString.includes('internal-error')) {
