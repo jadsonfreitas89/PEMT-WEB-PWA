@@ -1,0 +1,6 @@
+{
+  "name": "Checklist PEMT Web",
+  "description": "Aplicação Web e PWA para inspeção e checklist de Plataformas Elevatórias Móveis de Trabalho (PEMT).",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

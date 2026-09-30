@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Detalhes do Checklist"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Fotos da Inspeção"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textStyle="bold" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/ivPhoto1"
+                    android:layout_width="120dp"
+                    android:layout_height="160dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="#EEE"
+                    android:scaleType="centerCrop" />
+
+                <ImageView
+                    android:id="@+id/ivPhoto2"
+                    android:layout_width="120dp"
+                    android:layout_height="160dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="#EEE"
+                    android:scaleType="centerCrop" />
+
+                <ImageView
+                    android:id="@+id/ivPhoto3"
+                    android:layout_width="120dp"
+                    android:layout_height="160dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="#EEE"
+                    android:scaleType="centerCrop" />
+
+                <ImageView
+                    android:id="@+id/ivPhoto4"
+                    android:layout_width="120dp"
+                    android:layout_height="160dp"
+                    android:background="#EEE"
+                    android:scaleType="centerCrop" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Assinatura"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/ivSignature"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_marginTop="8dp"
+            android:background="#EEE"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Itens Verificados"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvItemsList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="?attr/textAppearanceBodySmall" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

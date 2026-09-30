@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">App checklist PEMT</string>
+    <string name="checklist_title">Checklist PEMT</string>
+
+    <!-- Seção 1: Introdução -->
+    <string name="intro_title">Por que realizar a inspeção?</string>
+    <string name="intro_text">A inspeção da Plataforma Elevatória Móvel de Trabalho (PEMT) é uma etapa essencial para garantir a segurança dos operadores e das pessoas ao redor.\n\nAntes de cada utilização, devem ser verificadas as condições gerais do equipamento, incluindo seus sistemas de segurança, comandos, estrutura, componentes hidráulicos, elétricos e demais itens previstos pelo fabricante.\n\nA identificação antecipada de falhas reduz significativamente o risco de acidentes, evita paradas inesperadas e contribui para uma operação mais segura e eficiente.\n\nConforme a NR-18, a utilização da PEMT deve ser precedida de inspeção visual e teste funcional antes do início do trabalho ou de cada turno de operação.\n\nNunca opere uma plataforma elevatória que apresente defeitos ou condições inseguras.</string>
+    <string name="btn_continue">Continuar</string>
+
+    <!-- Seção 2: Compromisso -->
+    <string name="commitment_title">Compromisso com a Segurança</string>
+    <string name="commitment_text">Ao iniciar esta inspeção, declaro que realizarei todas as verificações de forma responsável, criteriosa e imparcial, seguindo as recomendações do fabricante, os procedimentos internos da empresa e as normas de segurança aplicáveis.\n\nReconheço que a inspeção tem como principal objetivo preservar vidas, prevenir acidentes, proteger o patrimônio e assegurar que o equipamento esteja em condições seguras para operação.\n\nComprometo-me a informar imediatamente qualquer irregularidade encontrada e a impedir a utilização do equipamento sempre que forem identificadas condições que possam comprometer a segurança dos trabalhadores.\n\nA segurança deve ser sempre a prioridade.</string>
+    <string name="commitment_checkbox">Li e estou ciente.</string>
+    <string name="btn_start_inspection">Iniciar Inspeção</string>
+
+    <!-- Seção 3: PDF -->
+    <string name="pdf_declaration_title">Declaração da Inspeção</string>
+    <string name="pdf_declaration_text">A inspeção desta Plataforma Elevatória Móvel de Trabalho (PEMT) foi realizada conforme os procedimentos estabelecidos pela empresa, pelas recomendações do fabricante e pelas exigências aplicáveis da Norma Regulamentadora NR-18.\n\nO objetivo desta inspeção é verificar as condições de segurança, funcionamento e integridade dos componentes do equipamento, identificando eventuais irregularidades que possam comprometer sua operação.\n\nA realização desta inspeção contribui para a prevenção de acidentes, redução de riscos operacionais e preservação da integridade física dos trabalhadores.\n\nEste relatório registra as condições observadas no momento da inspeção e serve como evidência documental das verificações realizadas.</string>
+
+    <string name="backup_success">✓ PDF salvo no dispositivo.\n✓ Backup realizado no Google Drive.</string>
+    <string name="backup_pending">✓ PDF salvo no dispositivo.\n⏳ Backup pendente de sincronização.</string>
+    <string name="backup_pending_error">✓ PDF salvo no dispositivo.\n⏳ Backup pendente de sincronização (Falha no envio).</string>
+    <string name="hint_model">Modelo (ex: SJ3219)</string>
+    <string name="hint_serial">Número de Série</string>
+    <string name="btn_finish">Finalizar Checklist</string>
+    <string name="toast_result">%1$d itens verificados de %2$d</string>
+    <string name="default_web_client_id">308572152048-95d404pr70et4f2vd8j5nns0vplg1lrc.apps.googleusercontent.com</string>
+</resources>

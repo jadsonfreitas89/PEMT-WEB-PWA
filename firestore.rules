@@ -1,0 +1,170 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------
+    // FUNÇÕES AUXILIARES
+    // -------------------------------------------------------------
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Retorna o perfil do usuário atual diretamente do banco de dados (confiável)
+    function getMyProfile() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
+    }
+
+    // Verifica se o usuário possui perfil gravado no Firestore
+    function hasMyProfile() {
+      return exists(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+
+    // Verifica se o usuário atual é administrador
+    function isAdmin() {
+      return hasMyProfile() && 
+        (getMyProfile().perfil == 'ADMIN' || getMyProfile().perfil == 'ADMINISTRADOR');
+    }
+
+    // Retorna o empresaId do usuário atual vindo do banco de dados
+    function myCompanyId() {
+      return getMyProfile().empresaId;
+    }
+
+    // Verifica se pertence à empresa informada
+    function belongsToMyCompany(companyId) {
+      return hasMyProfile() && myCompanyId() == companyId;
+    }
+
+    // Helper para verificar se empresaId é uma empresa existente na coleção de empresas
+    function companyExists(companyId) {
+      return exists(/databases/$(database)/documents/empresas/$(companyId));
+    }
+
+    // -------------------------------------------------------------
+    // USUARIOS
+    // -------------------------------------------------------------
+    match /usuarios/{uid} {
+      // Um usuário autenticado pode ler e gerenciar o seu próprio perfil
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (isOwner(uid) && 
+        request.resource.data.empresaId == resource.data.empresaId &&
+        request.resource.data.empresaNome == resource.data.empresaNome &&
+        request.resource.data.perfil == resource.data.perfil &&
+        request.resource.data.codigoPessoal == resource.data.codigoPessoal &&
+        request.resource.data.createdAt == resource.data.createdAt
+      );
+      allow delete: if false; // Bloqueado
+    }
+
+    // Espelhamento na subcoleção de usuários de cada empresa
+    match /empresas/{empresaId}/usuarios/{uid} {
+      allow read: if isOwner(uid) || belongsToMyCompany(empresaId) || isAdmin();
+      allow write: if isOwner(uid) || belongsToMyCompany(empresaId) || isAdmin();
+    }
+
+    // -------------------------------------------------------------
+    // EMPRESAS
+    // -------------------------------------------------------------
+    match /empresas/{empresaId} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------
+    // INSPEÇÕES
+    // -------------------------------------------------------------
+    match /inspecoes/{inspecaoId} {
+      // Listagem e visualização compartilhada de laudos da mesma empresa
+      allow read: if isAuthenticated() && belongsToMyCompany(resource.data.empresaId);
+
+      // Criação de inspeções: apenas se o usuário for o autor e o laudo pertencer à sua empresa
+      allow create: if isAuthenticated()
+        && request.resource.data.usuarioId == request.auth.uid
+        && belongsToMyCompany(request.resource.data.empresaId)
+        // Validação mínima de integridade
+        && request.resource.data.statusFinal in ['APROVADA', 'NÃO APROVADA'];
+
+      // Inspeções são imutáveis após envio
+      allow update: if false;
+
+      // Exclusão permitida apenas para usuários da mesma empresa
+      allow delete: if isAuthenticated() && belongsToMyCompany(resource.data.empresaId);
+    }
+
+    // -------------------------------------------------------------
+    // SUBCOLEÇÃO: ITENS DA INSPEÇÃO
+    // -------------------------------------------------------------
+    match /inspecoes/{inspecaoId}/itens/{itemId} {
+      allow read: if isAuthenticated() && belongsToMyCompany(get(/databases/$(database)/documents/inspecoes/$(inspecaoId)).data.empresaId);
+      allow create: if isAuthenticated() 
+        && belongsToMyCompany(get(/databases/$(database)/documents/inspecoes/$(inspecaoId)).data.empresaId)
+        && get(/databases/$(database)/documents/inspecoes/$(inspecaoId)).data.usuarioId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // -------------------------------------------------------------
+    // SUBCOLEÇÃO: FOTOS DA INSPEÇÃO
+    // -------------------------------------------------------------
+    match /inspecoes/{inspecaoId}/fotos/{fotoId} {
+      allow read: if isAuthenticated() && belongsToMyCompany(get(/databases/$(database)/documents/inspecoes/$(inspecaoId)).data.empresaId);
+      allow create: if isAuthenticated() 
+        && belongsToMyCompany(get(/databases/$(database)/documents/inspecoes/$(inspecaoId)).data.empresaId)
+        && get(/databases/$(database)/documents/inspecoes/$(inspecaoId)).data.usuarioId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // -------------------------------------------------------------
+    // PLATAFORMAS
+    // -------------------------------------------------------------
+    match /plataformas/{plataformaId} {
+      allow read: if isAuthenticated() && belongsToMyCompany(resource.data.empresaId);
+      allow create: if isAuthenticated() && belongsToMyCompany(request.resource.data.empresaId);
+      allow update, delete: if false;
+    }
+
+    // -------------------------------------------------------------
+    // CHECKLISTS LEGADOS
+    // -------------------------------------------------------------
+    match /checklists/{inspecaoId} {
+      // Permite leitura apenas se o usuário pertencer à mesma empresa associada ao checklist
+      allow read: if isAuthenticated() 
+        && (belongsToMyCompany(resource.data.empresaId) || belongsToMyCompany(resource.data.companyId));
+
+      // Permite criação por dual-write apenas se a empresa coincidir com a do usuário logado
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && (belongsToMyCompany(request.resource.data.empresaId) || belongsToMyCompany(request.resource.data.companyId));
+
+      allow update: if false;
+      allow delete: if isAuthenticated() 
+        && (belongsToMyCompany(resource.data.empresaId) || belongsToMyCompany(resource.data.companyId));
+    }
+
+    // SUBCOLEÇÃO: ITENS DO CHECKLIST LEGADO
+    match /checklists/{inspecaoId}/items/{itemId} {
+      allow read: if isAuthenticated() && (
+        belongsToMyCompany(get(/databases/$(database)/documents/checklists/$(inspecaoId)).data.empresaId) ||
+        belongsToMyCompany(get(/databases/$(database)/documents/checklists/$(inspecaoId)).data.companyId)
+      );
+      allow create: if isAuthenticated() && (
+        belongsToMyCompany(get(/databases/$(database)/documents/checklists/$(inspecaoId)).data.empresaId) ||
+        belongsToMyCompany(get(/databases/$(database)/documents/checklists/$(inspecaoId)).data.companyId)
+      );
+      allow update, delete: if false;
+    }
+
+    // -------------------------------------------------------------
+    // CONFIGURAÇÕES DO SISTEMA (Bootstrap)
+    // -------------------------------------------------------------
+    match /config/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+  }
+}
