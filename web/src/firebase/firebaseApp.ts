@@ -27,9 +27,7 @@ if (firebaseConfig) {
     // Se a persistência local não estiver disponível, mantém a configuração padrão.
   });
   try {
-    firestoreInstance = initializeFirestore(firebaseApp, {
-      experimentalForceLongPolling: true
-    });
+    firestoreInstance = initializeFirestore(firebaseApp, {});
   } catch {
     firestoreInstance = getFirestore(firebaseApp);
   }

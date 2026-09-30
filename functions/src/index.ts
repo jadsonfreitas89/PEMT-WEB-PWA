@@ -136,19 +136,31 @@ export const adminToggleCompanyStatus = onCall(async (request) => {
     return { success: true, empresaId, ativo };
 });
 
+export const changePassword = onCall(async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Autenticação necessária.');
+    const { newPassword } = request.data;
+    if (!newPassword || newPassword.length < 6) throw new HttpsError('invalid-argument', 'Senha muito curta.');
+
+    await admin.auth().updateUser(request.auth.uid, { password: newPassword });
+    await db.collection(USERS_COLLECTION).doc(request.auth.uid).update({ primeiroAcesso: false });
+    return { success: true };
+});
+
 export const adminCreateUser = onCall(async (request) => {
     if (!isAdmin(request.auth)) throw new HttpsError('permission-denied', 'Acesso negado.');
 
-    const { nome, empresaId, perfil } = request.data;
-    if (!nome || !empresaId || !perfil || !ALLOWED_PROFILES.includes(perfil)) {
+    const { username, password, nome, empresaId, perfil } = request.data;
+    if (!username || !password || !nome || !empresaId || !perfil || !ALLOWED_PROFILES.includes(perfil)) {
         throw new HttpsError('invalid-argument', 'Dados inválidos ou perfil não permitido.');
     }
+    
+    const email = `${username.toLowerCase()}@pemt.local`;
 
     const companyDoc = await db.collection(COMPANIES_COLLECTION).doc(empresaId).get();
     if (!companyDoc.exists) throw new HttpsError('not-found', 'Empresa não encontrada.');
     const companyName = companyDoc.data()?.nome;
 
-    const userRecord = await admin.auth().createUser({ displayName: nome });
+    const userRecord = await admin.auth().createUser({ email, password, displayName: nome });
 
     for (let i = 0; i < MAX_ATTEMPTS; i++) {
         const codigoPessoal = generateCode('PESS');
@@ -162,10 +174,13 @@ export const adminCreateUser = onCall(async (request) => {
 
                 t.set(userRef, {
                     nome,
+                    email,
                     empresaId,
                     empresaNome: companyName,
                     perfil,
                     codigoPessoal,
+                    primeiroAcesso: true,
+                    ativo: true,
                     createdAt: admin.firestore.FieldValue.serverTimestamp()
                 });
                 t.set(codeRef, { uid: userRecord.uid, empresaId });
@@ -298,13 +313,12 @@ export const checkSystemInitialization = onCall(async (request) => {
 });
 
 export const bootstrapInitialAdmin = onCall(async (request) => {
-    if (!request.auth) {
-        throw new HttpsError('unauthenticated', 'Autenticação necessária.');
-    }
-
-    const uid = request.auth.uid;
+    // This can be called from admin/setup page.
+    // For now, let's allow it if no admin exists.
+    
     const configRef = db.collection('config').doc('sistema');
-    const userRef = db.collection(USERS_COLLECTION).doc(uid);
+    const adminEmail = 'admin@pemt.local';
+    const adminPassword = 'admin';
 
     try {
         await db.runTransaction(async (t) => {
@@ -313,39 +327,37 @@ export const bootstrapInitialAdmin = onCall(async (request) => {
                 throw new Error('ALREADY_INITIALIZED');
             }
 
-            const companiesSnapshot = await t.get(db.collection(COMPANIES_COLLECTION).limit(1));
-            if (!companiesSnapshot.empty) {
-                throw new Error('ALREADY_INITIALIZED');
-            }
+            // Create admin user in Auth
+            const userRecord = await admin.auth().createUser({
+                email: adminEmail,
+                password: adminPassword,
+                displayName: 'Administrador Inicial'
+            });
 
+            const userRef = db.collection(USERS_COLLECTION).doc(userRecord.uid);
+            
             t.set(configRef, {
                 instalacaoConcluida: true,
-                bootstrappedBy: uid,
+                bootstrappedBy: userRecord.uid,
                 bootstrappedAt: admin.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
 
-            const userDoc = await t.get(userRef);
-            const existingData = userDoc.exists ? userDoc.data() : {};
-
-            const updateData = {
-                ...(existingData || {}),
-                uid,
-                email: request.auth.token.email || existingData?.email || '',
-                nome: existingData?.nome || request.auth.token.name || 'Administrador Inicial',
+            t.set(userRef, {
+                uid: userRecord.uid,
+                email: adminEmail,
+                nome: 'Administrador Inicial',
                 perfil: 'ADMIN',
                 ativo: true,
-                primeiroAcesso: false,
+                primeiroAcesso: true,
                 atualizadoEm: admin.firestore.FieldValue.serverTimestamp()
-            };
+            }, { merge: true });
 
-            t.set(userRef, updateData, { merge: true });
+            await admin.auth().setCustomUserClaims(userRecord.uid, { admin: true });
         });
-
-        await admin.auth().setCustomUserClaims(uid, { admin: true });
 
         return {
             success: true,
-            message: 'Configuração inicial concluída com sucesso. Privilégios administrativos concedidos.'
+            message: 'Configuração inicial concluída com sucesso. Administrador criado: admin@pemt.com / admin'
         };
     } catch (err: any) {
         if (err.message === 'ALREADY_INITIALIZED') {

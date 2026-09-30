@@ -1,19 +1,18 @@
 import {
-  GoogleAuthProvider,
   User as FirebaseUser,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithPopup,
   sendPasswordResetEmail,
   signOut,
   onAuthStateChanged,
   updateProfile
 } from 'firebase/auth';
 import { authInstance } from './firebaseApp';
+import { httpsCallable } from 'firebase/functions';
+import { getFunctions } from 'firebase/functions';
+import { firebaseApp } from './firebaseApp';
 import { createInitialUserProfile } from './firebaseProfile';
 import type { User } from '../types/user';
-
-const provider = new GoogleAuthProvider();
 
 function mapFirebaseUser(user: FirebaseUser | null): User | null {
   if (!user) return null;
@@ -26,58 +25,18 @@ function mapFirebaseUser(user: FirebaseUser | null): User | null {
   };
 }
 
-async function login(email: string, password: string) {
+async function login(username: string, password: string) {
   if (!authInstance) {
     throw new Error('Firebase não está configurado.');
   }
-  return await signInWithEmailAndPassword(authInstance, email.trim(), password);
+  const email = `${username.toLowerCase()}@pemt.local`;
+  return await signInWithEmailAndPassword(authInstance, email, password);
 }
 
-async function register(email: string, password: string, name?: string) {
-  if (!authInstance) {
-    throw new Error('Firebase não está configurado.');
-  }
-  const credential = await createUserWithEmailAndPassword(authInstance, email.trim(), password);
-  if (name && credential.user) {
-    try {
-      await updateProfile(credential.user, { displayName: name.trim() });
-    } catch {
-      // Ignora erro menor de displayName
-    }
-    await createInitialUserProfile({
-      uid: credential.user.uid,
-      email: email.trim(),
-      nome: name.trim(),
-      tipoLogin: 'EMAIL',
-      emailVerificado: credential.user.emailVerified
-    });
-  }
-  return credential;
-}
-
-async function loginWithGoogle() {
-  if (!authInstance) {
-    throw new Error('Firebase não está configurado.');
-  }
-  const credential = await signInWithPopup(authInstance, provider);
-  if (credential.user) {
-    await createInitialUserProfile({
-      uid: credential.user.uid,
-      email: credential.user.email || '',
-      nome: credential.user.displayName || '',
-      tipoLogin: 'GOOGLE',
-      fotoPerfil: credential.user.photoURL,
-      emailVerificado: credential.user.emailVerified
-    });
-  }
-  return credential;
-}
-
-async function resetPassword(email: string) {
-  if (!authInstance) {
-    throw new Error('Firebase não está configurado.');
-  }
-  await sendPasswordResetEmail(authInstance, email.trim());
+async function changePassword(newPassword: string) {
+    const functionsInstance = getFunctions(firebaseApp!);
+    const changePasswordFn = httpsCallable<{ newPassword: string }, { success: boolean }>(functionsInstance, 'changePassword');
+    return await changePasswordFn({ newPassword });
 }
 
 async function logout() {
@@ -95,9 +54,7 @@ function onAuthStateChangedListener(callback: (user: User | null) => void) {
 
 export default {
   login,
-  register,
-  loginWithGoogle,
-  resetPassword,
+  changePassword,
   logout,
   onAuthStateChanged: onAuthStateChangedListener
 };
