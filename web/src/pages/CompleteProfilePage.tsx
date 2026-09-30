@@ -114,23 +114,24 @@ export default function CompleteProfilePage() {
     e.preventDefault();
     setPasswordError(null);
     if (newPassword.length < 6) {
-        setPasswordError('A senha deve ter pelo menos 6 caracteres.');
-        return;
+      setPasswordError('A senha deve ter pelo menos 6 caracteres.');
+      return;
     }
     if (newPassword !== confirmPassword) {
-        setPasswordError('As senhas não coincidem.');
-        return;
+      setPasswordError('As senhas não coincidem.');
+      return;
     }
     setIsChangingPassword(true);
     try {
-        await changePassword(newPassword);
-        setSuccessNotice('Senha alterada com sucesso!');
-        setNewPassword('');
-        setConfirmPassword('');
+      await changePassword(newPassword);
+      setSuccessNotice('Senha alterada com sucesso! Acessando o sistema...');
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (err: any) {
-        setPasswordError(err?.message || 'Erro ao alterar senha.');
+      console.error('[FIRST ACCESS DEBUG] Erro ao alterar senha:', err);
+      setPasswordError(err?.message || 'Erro ao alterar senha.');
     } finally {
-        setIsChangingPassword(false);
+      setIsChangingPassword(false);
     }
   };
 
@@ -154,14 +155,18 @@ export default function CompleteProfilePage() {
                   justifyContent: 'center'
                 }}
               >
-                <Building2 size={20} />
+                {profile?.primeiroAcesso ? <KeyRound size={20} /> : <Building2 size={20} />}
               </div>
               <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                Conclusão de Cadastro & Vinculação
+                {profile?.primeiroAcesso
+                  ? (isAdmin ? 'Primeiro Acesso' : 'Primeiro Acesso & Vinculação')
+                  : 'Conclusão de Cadastro & Vinculação'}
               </h1>
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 }}>
-              Informe seus dados profissionais e o código fornecido pela sua empresa para concluir o acesso.
+              {profile?.primeiroAcesso
+                ? (isAdmin ? 'Defina sua nova senha para continuar.' : 'Defina sua nova senha e conclua os dados de acesso.')
+                : 'Informe seus dados profissionais e o código fornecido pela sua empresa para concluir o acesso.'}
             </p>
           </div>
 
