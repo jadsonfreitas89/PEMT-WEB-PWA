@@ -14,7 +14,13 @@ import { vincularEmpresaPorCodigo } from '../firebase/firebaseProfile';
 
 export default function CompleteProfilePage() {
   const navigate = useNavigate();
-  const { user, profile, authState, refreshProfile, logout } = useAuth();
+  const { user, profile, authState, refreshProfile, logout, changePassword } = useAuth();
+
+  // Password change state
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Dados do Inspetor
   const [nome, setNome] = useState('');
@@ -96,6 +102,30 @@ export default function CompleteProfilePage() {
   const handleLogout = async () => {
     await logout();
     navigate('/login');
+  };
+
+  const handlePasswordSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    if (newPassword.length < 6) {
+        setPasswordError('A senha deve ter pelo menos 6 caracteres.');
+        return;
+    }
+    if (newPassword !== confirmPassword) {
+        setPasswordError('As senhas não coincidem.');
+        return;
+    }
+    setIsChangingPassword(true);
+    try {
+        await changePassword(newPassword);
+        setSuccessNotice('Senha alterada com sucesso!');
+        setNewPassword('');
+        setConfirmPassword('');
+    } catch (err: any) {
+        setPasswordError(err?.message || 'Erro ao alterar senha.');
+    } finally {
+        setIsChangingPassword(false);
+    }
   };
 
   return (
@@ -192,7 +222,28 @@ export default function CompleteProfilePage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '18px' }}>
+        {profile?.primeiroAcesso ? (
+          <form onSubmit={handlePasswordSubmit} style={{ display: 'grid', gap: '18px' }}>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>Defina sua nova senha</h2>
+            {passwordError && (
+                <div style={{ padding: '12px', background: 'var(--danger-subtle)', borderRadius: 'var(--radius-md)', color: '#f87171', fontSize: '0.85rem' }}>
+                    {passwordError}
+                </div>
+            )}
+            <div>
+              <label>Nova Senha</label>
+              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required disabled={isChangingPassword} />
+            </div>
+            <div>
+              <label>Confirme a Nova Senha</label>
+              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={isChangingPassword} />
+            </div>
+            <button type="submit" className="btn-primary" disabled={isChangingPassword}>
+              {isChangingPassword ? 'Alterando...' : 'Alterar Senha'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '18px' }}>
           
           {/* SEÇÃO 1: DADOS PESSOAIS DO INSPETOR */}
           <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
@@ -307,6 +358,7 @@ export default function CompleteProfilePage() {
             )}
           </button>
         </form>
+        )}
       </div>
     </div>
   );

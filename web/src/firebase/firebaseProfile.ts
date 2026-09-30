@@ -77,6 +77,7 @@ export function mapProfileToUser(profile: UserProfile): User {
  */
 export function isProfileComplete(profile: UserProfile | null): boolean {
   if (!profile) return false;
+  if (profile.primeiroAcesso) return false;
   const companyId = profile.empresaId?.trim();
   const nome = profile.nome?.trim();
   const ativo = profile.ativo !== false;

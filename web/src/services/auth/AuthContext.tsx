@@ -35,6 +35,7 @@ export interface AuthContextValue {
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  changePassword: (newPassword: string) => Promise<void>;
   completeProfile: (data: {
     nome: string;
     crea?: string | null;
@@ -262,6 +263,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await AuthService.resetPassword(email);
   };
 
+  const changePassword = async (newPassword: string) => {
+    const { default: auth } = await import('../../firebase/firebaseAuth');
+    await auth.changePassword(newPassword);
+    await refreshProfile();
+  };
+
   const completeProfileHandler = async (data: {
     nome: string;
     crea?: string | null;
@@ -370,6 +377,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginWithGoogle,
       logout,
       resetPassword,
+      changePassword,
       completeProfile: completeProfileHandler,
       refreshProfile,
       updateProfile,
