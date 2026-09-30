@@ -357,7 +357,7 @@ export const bootstrapInitialAdmin = onCall(async (request) => {
 
         return {
             success: true,
-            message: 'Configuração inicial concluída com sucesso. Administrador criado: admin@pemt.com / admin'
+            message: 'Configuração inicial concluída com sucesso. Administrador criado: admin@pemt.local / admin'
         };
     } catch (err: any) {
         if (err.message === 'ALREADY_INITIALIZED') {
@@ -365,5 +365,24 @@ export const bootstrapInitialAdmin = onCall(async (request) => {
         }
         if (err instanceof HttpsError) throw err;
         throw new HttpsError('internal', 'Erro interno ao realizar a configuração inicial.');
+    }
+});
+
+export const debugAdminUser = onCall(async (request) => {
+    const adminEmail = 'admin@pemt.local';
+    try {
+        const user = await admin.auth().getUserByEmail(adminEmail);
+        const userDoc = await db.collection(USERS_COLLECTION).doc(user.uid).get();
+        return {
+            existsInAuth: true,
+            uid: user.uid,
+            existsInFirestore: userDoc.exists,
+            profile: userDoc.data()
+        };
+    } catch (err: any) {
+        return {
+            existsInAuth: false,
+            error: err.message
+        };
     }
 });

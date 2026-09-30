@@ -29,8 +29,27 @@ async function login(username: string, password: string) {
   if (!authInstance) {
     throw new Error('Firebase não está configurado.');
   }
+  
   const email = `${username.toLowerCase()}@pemt.local`;
-  return await signInWithEmailAndPassword(authInstance, email, password);
+  console.log('[AUTH DEBUG] username recebido:', username);
+  console.log('[AUTH DEBUG] identificador Firebase:', email);
+  
+  try {
+    console.log('[AUTH DEBUG] iniciando signIn:');
+    const credential = await signInWithEmailAndPassword(authInstance, email, password);
+    console.log('[AUTH DEBUG] Firebase Auth sucesso, UID:', credential.user.uid);
+    
+    // Diagnostic call
+    const functionsInstance = getFunctions(firebaseApp!);
+    const debugFn = httpsCallable<{}, any>(functionsInstance, 'debugAdminUser');
+    const debugResult = await debugFn();
+    console.log('[AUTH DEBUG] Resultado do diagnostico do admin:', debugResult.data);
+    
+    return credential;
+  } catch (error: any) {
+    console.error('[AUTH DEBUG] Firebase Auth erro:', error.code, error.message);
+    throw error;
+  }
 }
 
 async function changePassword(newPassword: string) {
